@@ -3,7 +3,8 @@ import { mergeAttributes, Node } from "@tiptap/core";
 import { getPublicURL } from "../utils/get-root-path";
 
 export interface ImageAttributes {
-  id: string;
+  id?: string;
+  src?: string;
   alt?: string;
   filename?: string;
   width?: string;
@@ -14,13 +15,11 @@ export interface ImageAttributes {
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     image: {
-      /**
-       * Add an image
-       */
       setImage: (options: ImageAttributes) => ReturnType;
     };
   }
 }
+
 interface ImageOptions {
   publicURL: string;
   HTMLAttributes: Record<string, never>;
@@ -45,51 +44,51 @@ export const Image = Node.create<ImageOptions>({
         default: null,
         parseHTML: (element) => element.getAttribute("data-directus-id"),
         renderHTML: (attributes) => {
-          return {
-            "data-directus-id": attributes.id,
-          };
+          if (!attributes.id) return {};
+          return { "data-directus-id": attributes.id };
         },
       },
-      alt: {
+      src: {
         default: null,
+        parseHTML: (element) => {
+          if (element.getAttribute("data-directus-id")) return null;
+          return element.getAttribute("src");
+        },
+        renderHTML: (attributes) => {
+          if (!attributes.src) return {};
+          return { src: attributes.src };
+        },
       },
+      alt: { default: null },
       filename: {
         default: null,
         parseHTML: (element) => element.getAttribute("data-directus-filename"),
         renderHTML: (attributes) => {
-          if (!attributes.filename) {
-            return {};
-          }
-          return {
-            "data-directus-filename": attributes.filename,
-          };
+          if (!attributes.filename) return {};
+          return { "data-directus-filename": attributes.filename };
         },
       },
-      width: {
-        default: null,
-      },
-      height: {
-        default: null,
-      },
-      title: {
-        default: null,
-      },
+      width: { default: null },
+      height: { default: null },
+      title: { default: null },
     };
   },
 
   parseHTML() {
-    return [
-      {
-        tag: "img[data-directus-id]",
-      },
-    ];
+    return [{ tag: "img[data-directus-id]" }, { tag: "img[src]" }];
   },
 
   renderHTML({ HTMLAttributes }) {
     const id = HTMLAttributes["data-directus-id"];
-    const filename = HTMLAttributes["data-directus-filename"];
-    const src = this.options.publicURL + id + (filename ? "/" + filename : "");
-    return ["img", mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, { src })];
+
+    if (id) {
+      const filename = HTMLAttributes["data-directus-filename"];
+      const src = this.options.publicURL + id + (filename ? "/" + filename : "");
+      return ["img", mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, { src })];
+    }
+
+    // External URL - src already in HTMLAttributes
+    return ["img", mergeAttributes(this.options.HTMLAttributes, HTMLAttributes)];
   },
 
   addCommands() {
@@ -97,10 +96,7 @@ export const Image = Node.create<ImageOptions>({
       setImage:
         (options) =>
         ({ commands }) => {
-          return commands.insertContent({
-            type: this.name,
-            attrs: options,
-          });
+          return commands.insertContent({ type: this.name, attrs: options });
         },
     };
   },

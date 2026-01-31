@@ -103,7 +103,7 @@ const editorExtensions = editor.extensionManager.extensions.map((ext) => ext.nam
 
 const { linkDrawerOpen, linkHref, linkTarget, linkOpen, linkClose, linkSave, linkRemove } = useLink(editor);
 
-const { imageDrawerOpen, imageSelection, imageSelect, imageOpen, imageClose, imageSave } = useImage(editor);
+const { imageDrawerOpen, imageSelection, imageUrlInput, imageSelect, imageSetUrl, imageOpen, imageClose, imageSave } = useImage(editor);
 
 const textAlignActive = computed(() => {
   return ["left", "center", "right", "justify"].find((align) => editor.isActive({ textAlign: align }));
@@ -751,38 +751,57 @@ onBeforeUnmount(() => {
       </template>
     </v-drawer>
 
-    <v-drawer v-model="imageDrawerOpen" :title="t('wysiwyg_options.image')" icon="image" @cancel="imageClose">
-      <div class="content">
-        <template v-if="imageSelection">
-          <img class="image-preview" :src="`/assets/${imageSelection.id}`" />
-          <div class="grid">
-            <div class="field">
-              <div class="type-label">{{ t("fields.directus_files.filename_download") }}</div>
-              <v-input v-model="imageSelection.filename" nullable />
-            </div>
-            <div class="field">
-              <div class="type-label">{{ t("alt_text") }}</div>
-              <v-input v-model="imageSelection.alt" :nullable="false" />
-            </div>
-            <div class="field half">
-              <div class="type-label">{{ t("width") }}</div>
-              <v-input v-model="imageSelection.width" />
-            </div>
-            <div class="field half-right">
-              <div class="type-label">{{ t("height") }}</div>
-              <v-input v-model="imageSelection.height" />
-            </div>
-          </div>
-        </template>
-        <v-upload v-else :multiple="false" from-library from-url @input="imageSelect" />
+<v-drawer v-model="imageDrawerOpen" :title="t('wysiwyg_options.image')" icon="image" @cancel="imageClose">
+  <div class="content">
+    <template v-if="imageSelection">
+      <img 
+        class="image-preview" 
+        :src="imageSelection.id ? `/assets/${imageSelection.id}` : imageSelection.src" 
+      />
+      <div class="grid">
+        <div v-if="imageSelection.id" class="field">
+          <div class="type-label">{{ t("fields.directus_files.filename_download") }}</div>
+          <v-input v-model="imageSelection.filename" nullable />
+        </div>
+        <div v-if="imageSelection.src && !imageSelection.id" class="field full">
+          <div class="type-label">URL</div>
+          <v-input v-model="imageSelection.src" />
+        </div>
+        <div class="field">
+          <div class="type-label">{{ t("alt_text") }}</div>
+          <v-input v-model="imageSelection.alt" :nullable="false" />
+        </div>
+        <div class="field half">
+          <div class="type-label">{{ t("width") }}</div>
+          <v-input v-model="imageSelection.width" />
+        </div>
+        <div class="field half-right">
+          <div class="type-label">{{ t("height") }}</div>
+          <v-input v-model="imageSelection.height" />
+        </div>
       </div>
+    </template>
+    <template v-else>
+      <div class="field full" style="margin-bottom: 24px;">
+        <div class="type-label">Image URL</div>
+        <div style="display: flex; gap: 8px;">
+          <v-input v-model="imageUrlInput" placeholder="https://example.com/image.jpg" style="flex: 1;" />
+          <v-button :disabled="!imageUrlInput" @click="imageSetUrl(imageUrlInput)">
+            Use URL
+          </v-button>
+        </div>
+      </div>
+      <div class="type-label" style="margin-bottom: 8px;">Or select from library</div>
+      <v-upload :multiple="false" from-library @input="imageSelect" />
+    </template>
+  </div>
+  <template #actions>
+    <v-button v-tooltip.bottom="t('save_image')" icon rounded @click="imageSave">
+      <v-icon name="check" />
+    </v-button>
+  </template>
+</v-drawer>
 
-      <template #actions>
-        <v-button v-tooltip.bottom="t('save_image')" icon rounded @click="imageSave">
-          <v-icon name="check" />
-        </v-button>
-      </template>
-    </v-drawer>
   </div>
 </template>
 
