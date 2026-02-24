@@ -905,6 +905,9 @@ onBeforeUnmount(() => {
     --v-button-background-color-active: var(--theme--form--field--input--border-color);
     --v-button-color-active: var(--theme--form--field--input--foreground);
 
+    position: sticky;
+    top: 0;
+    z-index: 10;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
