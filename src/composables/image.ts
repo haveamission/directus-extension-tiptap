@@ -105,11 +105,11 @@ export function useImage(editor: Editor) {
     }
   }
 
-  function toggleLockAspectRatio() {
-    lockAspectRatio.value = !lockAspectRatio.value;
+  function toggleLockAspectRatio(value: boolean) {
+    lockAspectRatio.value = value;
 
     // When locking, recalculate aspect ratio from current values
-    if (lockAspectRatio.value && imageSelection.value) {
+    if (value && imageSelection.value) {
       const w = parseFloat(imageSelection.value.width || "");
       const h = parseFloat(imageSelection.value.height || "");
       if (w && h && !isNaN(w) && !isNaN(h)) {

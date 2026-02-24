@@ -791,7 +791,8 @@ onBeforeUnmount(() => {
             </div>
             <div class="field full">
               <v-checkbox
-                v-model="lockAspectRatio"
+                :model-value="lockAspectRatio"
+                :disabled="!imageSelection.width || !imageSelection.height"
                 label="Lock aspect ratio"
                 @update:model-value="toggleLockAspectRatio"
               />
