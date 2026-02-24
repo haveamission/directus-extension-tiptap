@@ -767,13 +767,13 @@ onBeforeUnmount(() => {
     <v-drawer v-model="imageDrawerOpen" :title="t('wysiwyg_options.image')" icon="image" @cancel="imageClose">
       <div class="content">
         <template v-if="imageSelection">
-          <img class="image-preview" :src="imageSelection.id ? `/assets/${imageSelection.id}` : imageSelection.src" />
+          <img class="image-preview" :src="imageSelection?.id ? `/assets/${imageSelection.id}` : imageSelection?.src" />
           <div class="grid">
-            <div v-if="imageSelection.id" class="field">
+            <div v-if="imageSelection?.id" class="field">
               <div class="type-label">{{ t("fields.directus_files.filename_download") }}</div>
               <v-input v-model="imageSelection.filename" nullable />
             </div>
-            <div v-if="imageSelection.src && !imageSelection.id" class="field full">
+            <div v-if="imageSelection?.src && !imageSelection?.id" class="field full">
               <div class="type-label">URL</div>
               <v-input v-model="imageSelection.src" />
             </div>
@@ -783,16 +783,16 @@ onBeforeUnmount(() => {
             </div>
             <div class="field half">
               <div class="type-label">{{ t("width") }}</div>
-              <v-input :model-value="imageSelection.width" @update:model-value="updateWidth" />
+              <v-input :model-value="imageSelection?.width" @update:model-value="updateWidth" />
             </div>
             <div class="field half-right">
               <div class="type-label">{{ t("height") }}</div>
-              <v-input :model-value="imageSelection.height" @update:model-value="updateHeight" />
+              <v-input :model-value="imageSelection?.height" @update:model-value="updateHeight" />
             </div>
             <div class="field full">
               <v-checkbox
                 :model-value="lockAspectRatio"
-                :disabled="!imageSelection.width || !imageSelection.height"
+                :disabled="!imageSelection?.width || !imageSelection?.height"
                 label="Lock aspect ratio"
                 @update:model-value="toggleLockAspectRatio"
               />
