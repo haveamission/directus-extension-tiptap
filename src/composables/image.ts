@@ -8,6 +8,7 @@ export function useImage(editor: Editor) {
   const imageUrlInput = ref("");
   const lockAspectRatio = ref(false);
   const originalAspectRatio = ref<number | null>(null);
+  const generatingAlt = ref(false);
 
   function imageOpen() {
     if (editor.isActive("image")) {
@@ -15,7 +16,6 @@ export function useImage(editor: Editor) {
       imageSelection.value = attrs;
       imageUrlInput.value = attrs.src || "";
 
-      // Calculate original aspect ratio if both dimensions exist
       const w = parseFloat(attrs.width || "");
       const h = parseFloat(attrs.height || "");
       if (w && h && !isNaN(w) && !isNaN(h)) {
@@ -29,6 +29,7 @@ export function useImage(editor: Editor) {
       originalAspectRatio.value = null;
     }
     lockAspectRatio.value = false;
+    generatingAlt.value = false;
     imageDrawerOpen.value = true;
   }
 
@@ -38,6 +39,7 @@ export function useImage(editor: Editor) {
     imageUrlInput.value = "";
     lockAspectRatio.value = false;
     originalAspectRatio.value = null;
+    generatingAlt.value = false;
   }
 
   function imageSave() {
@@ -59,7 +61,6 @@ export function useImage(editor: Editor) {
       height: h ? String(h) : undefined,
     };
 
-    // Set aspect ratio from the selected image
     if (w && h) {
       originalAspectRatio.value = w / h;
     } else {
@@ -108,7 +109,6 @@ export function useImage(editor: Editor) {
   function toggleLockAspectRatio(value: boolean) {
     lockAspectRatio.value = value;
 
-    // When locking, recalculate aspect ratio from current values
     if (value && imageSelection.value) {
       const w = parseFloat(imageSelection.value.width || "");
       const h = parseFloat(imageSelection.value.height || "");
@@ -118,12 +118,51 @@ export function useImage(editor: Editor) {
     }
   }
 
+  async function generateAltText() {
+    if (!imageSelection.value || generatingAlt.value) return;
+
+    generatingAlt.value = true;
+
+    try {
+      const body: Record<string, string> = {};
+
+      if (imageSelection.value.id) {
+        body.fileId = imageSelection.value.id;
+      } else if (imageSelection.value.src) {
+        body.imageUrl = imageSelection.value.src;
+      } else {
+        return;
+      }
+
+      const response = await fetch("/description-generator/generate-alt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.success && data.altText) {
+        imageSelection.value.alt = data.altText;
+      }
+    } catch (error) {
+      console.error("Failed to generate alt text:", error);
+    } finally {
+      generatingAlt.value = false;
+    }
+  }
+
   return {
     imageDrawerOpen,
     imageSelection,
     imageUrlInput,
     lockAspectRatio,
     originalAspectRatio,
+    generatingAlt,
     imageSelect,
     imageSetUrl,
     imageOpen,
@@ -132,5 +171,6 @@ export function useImage(editor: Editor) {
     updateWidth,
     updateHeight,
     toggleLockAspectRatio,
+    generateAltText,
   };
 }
