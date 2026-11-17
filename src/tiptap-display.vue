@@ -5,7 +5,7 @@ import { computed } from "vue";
 
 const props = withDefaults(
   defineProps<{
-    value: ValueType | null;
+    value?: ValueType | null;
     type: TypeType;
   }>(),
   { value: null },
@@ -16,9 +16,10 @@ function getText(json: JSONContent): string {
 }
 
 const text = computed(() => {
+  if (props.value === null) return "";
   switch (props.type) {
     case "json":
-      return getText(props.value);
+      return getText(props.value as JSONContent);
     case "text":
       return props.value;
   }

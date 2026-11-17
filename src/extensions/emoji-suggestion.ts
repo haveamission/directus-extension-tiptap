@@ -1,10 +1,25 @@
 import { VueRenderer } from "@tiptap/vue-3";
 import EmojiList from "../components/emoji-list.vue";
-import type { SuggestionOptions } from "@tiptap/suggestion";
-import type { EmojiItem } from "@tiptap-pro/extension-emoji";
-import tippy, { type Instance as TippyInstance } from "tippy.js";
+import type { SuggestionOptions, SuggestionProps } from "@tiptap/suggestion";
+import type { EmojiItem } from "@tiptap/extension-emoji";
+import { computePosition, flip, shift } from "@floating-ui/dom";
 
-export const suggestion: Omit<SuggestionOptions, "editor"> = {
+function updatePosition(props: SuggestionProps<EmojiItem>, element: HTMLElement) {
+  const rect = props.clientRect?.();
+  if (!rect) return;
+
+  computePosition({ getBoundingClientRect: () => rect }, element, {
+    placement: "bottom-start",
+    strategy: "absolute",
+    middleware: [shift(), flip()],
+  }).then(({ x, y, strategy }) => {
+    element.style.position = strategy;
+    element.style.left = `${x}px`;
+    element.style.top = `${y}px`;
+  });
+}
+
+export const suggestion: Omit<SuggestionOptions<EmojiItem>, "editor"> = {
   items: ({ editor, query }) => {
     return editor.storage.emoji.emojis
       .filter(({ shortcodes, tags }: EmojiItem) => {
@@ -18,7 +33,6 @@ export const suggestion: Omit<SuggestionOptions, "editor"> = {
 
   render: () => {
     let component: VueRenderer | null = null;
-    let popup: TippyInstance | null = null;
 
     return {
       onStart: (props) => {
@@ -27,28 +41,24 @@ export const suggestion: Omit<SuggestionOptions, "editor"> = {
           editor: props.editor,
         });
 
-        popup = tippy(document.body, {
-          getReferenceClientRect: props.clientRect,
-          appendTo: () => document.body,
-          content: component.element,
-          showOnCreate: true,
-          interactive: true,
-          trigger: "manual",
-          placement: "bottom-start",
-        });
+        const element = component.element as HTMLElement;
+        element.style.position = "absolute";
+        element.style.zIndex = "1000";
+        document.body.appendChild(element);
+        updatePosition(props, element);
       },
 
       onUpdate(props) {
         component?.updateProps(props);
 
-        popup?.setProps({
-          getReferenceClientRect: props.clientRect,
-        });
+        if (component) {
+          updatePosition(props, component.element as HTMLElement);
+        }
       },
 
       onKeyDown(props) {
         if (props.event.key === "Escape") {
-          popup?.hide();
+          component?.element?.remove();
           component?.destroy();
 
           return true;
@@ -58,7 +68,7 @@ export const suggestion: Omit<SuggestionOptions, "editor"> = {
       },
 
       onExit() {
-        popup?.destroy();
+        component?.element?.remove();
         component?.destroy();
       },
     };

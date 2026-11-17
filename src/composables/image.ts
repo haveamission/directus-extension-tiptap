@@ -1,5 +1,5 @@
 import type { Editor } from "@tiptap/vue-3";
-import { ref, computed } from "vue";
+import { ref } from "vue";
 import type { ImageAttributes } from "../extensions/image";
 
 export function useImage(editor: Editor) {

@@ -1,6 +1,6 @@
 import type { ExtensionMeta } from "./index";
 import { suggestion } from "./emoji-suggestion";
-import type { EmojiOptions } from "@tiptap-pro/extension-emoji";
+import type { EmojiOptions } from "@tiptap/extension-emoji";
 
 type Options = Pick<EmojiOptions, "enableEmoticons">;
 
@@ -15,7 +15,7 @@ export type EmojiProps = {
 const extension: ExtensionMeta<Options, EmojiProps> = {
   name: "emoji",
   title: "Emoji",
-  package: "@tiptap-pro/extension-emoji",
+  package: "@tiptap/extension-emoji",
   group: "node",
   defaults,
   options: [
@@ -34,7 +34,7 @@ const extension: ExtensionMeta<Options, EmojiProps> = {
     },
   ],
   load: async (props) => {
-    const { Emoji } = await import("@tiptap-pro/extension-emoji");
+    const { Emoji } = await import("@tiptap/extension-emoji");
     return Emoji.configure({
       enableEmoticons: props.emojiEnableEmoticons ?? defaults.enableEmoticons,
       suggestion,

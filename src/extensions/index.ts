@@ -1,6 +1,6 @@
 import type { AnyExtension, Extensions } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
-import type { DeepPartial, Field } from "@directus/types";
+import type { AppField, DeepPartial } from "@directus/types";
 import underline from "./underline";
 import textAlign, { type TextAlignProps } from "./text-align";
 import characterCount, { type CharacterCountProps } from "./character-count";
@@ -43,7 +43,7 @@ export interface ExtensionMeta<Options extends object = object, Props extends ob
   title: string;
   package: string;
   group: ExtensionGroup;
-  options: DeepPartial<Field>[];
+  options: DeepPartial<AppField>[];
   defaults: Options;
   load(props: Props): PromiseLike<AnyExtension> | AnyExtension;
 }
@@ -73,7 +73,11 @@ export const extensionsMeta: ExtensionMeta[] = [
 ];
 
 export async function loadExtensions(props: ExtensionsProps): Promise<Extensions> {
-  const extensions: Extensions = [StarterKit];
+  // StarterKit 3 also bundles Link, Underline, ListKeymap and TrailingNode. Link and Underline are
+  // opt-in extensions here, and the other two were not part of the editor before TipTap 3.
+  const extensions: Extensions = [
+    StarterKit.configure({ link: false, underline: false, listKeymap: false, trailingNode: false }),
+  ];
 
   const exts = await Promise.all(
     extensionsMeta.filter((ext) => props.extensions?.includes(ext.name)).map((ext) => ext.load(props)),

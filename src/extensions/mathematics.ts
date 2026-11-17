@@ -3,12 +3,12 @@ import type { ExtensionMeta } from "./index";
 const extension: ExtensionMeta = {
   name: "mathematics",
   title: "Mathematics",
-  package: "@tiptap-pro/extension-mathematics",
+  package: "@tiptap/extension-mathematics",
   group: "editor",
   defaults: {},
   options: [],
   load: async () => {
-    const { Mathematics } = await import("@tiptap-pro/extension-mathematics");
+    const { Mathematics } = await import("@tiptap/extension-mathematics");
     return Mathematics;
   },
 };

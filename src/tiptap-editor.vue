@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { BubbleMenu, Editor, EditorContent } from "@tiptap/vue-3";
+import { Editor, EditorContent } from "@tiptap/vue-3";
+import { BubbleMenu } from "@tiptap/vue-3/menus";
 import { computed, onBeforeUnmount, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { translateShortcut } from "./utils/translate-shortcut";
@@ -21,10 +22,10 @@ import emoji from "./extensions/emoji";
 const { t } = useI18n({ messages });
 
 type Props = {
-  value: ValueType | null;
+  value?: ValueType | null;
   type: TypeType;
-  disabled: boolean;
-  autofocus: boolean;
+  disabled?: boolean;
+  autofocus?: boolean;
 } & ExtensionsProps;
 
 const props = withDefaults(defineProps<Props>(), {
@@ -74,6 +75,8 @@ const alignOptions = [
     shortcut: translateShortcut(["meta", "shift", "j"]),
   },
 ];
+
+const headingLevels = [1, 2, 3, 4, 5, 6] as const;
 
 const editorInitiated = ref<boolean>(false);
 
@@ -136,7 +139,7 @@ watch(
       return;
     }
 
-    editor.commands.setContent(value, false);
+    editor.commands.setContent(value, { emitUpdate: false });
     editorInitiated.value = true;
   },
   {
@@ -150,7 +153,7 @@ watch(
 );
 
 const emojiSelected = async (emoji: string) => {
-  const { emojiToShortcode } = await import("@tiptap-pro/extension-emoji");
+  const { emojiToShortcode } = await import("@tiptap/extension-emoji");
   const shortcode = emojiToShortcode(emoji, editor.storage.emoji.emojis);
   if (shortcode) {
     editor.chain().focus().setEmoji(shortcode).run();
@@ -164,7 +167,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="tiptap-editor" :class="{ disabled: props.disabled }">
-    <bubble-menu class="tiptap-editor__bubble" :editor="editor" :tippy-options="{ duration: 100 }">
+    <bubble-menu class="tiptap-editor__bubble" :editor="editor">
       <v-chip
         v-if="editorExtensions.includes('bold') && editor.can().toggleBold()"
         v-tooltip="t('wysiwyg_options.bold')"
@@ -331,7 +334,7 @@ onBeforeUnmount(() => {
         </template>
         <v-list>
           <v-list-item
-            v-for="n in 6"
+            v-for="n in headingLevels"
             :key="n"
             clickable
             :active="editor.isActive('heading', { level: n })"
@@ -686,7 +689,7 @@ onBeforeUnmount(() => {
         small
         icon
         :disabled="props.disabled"
-        :active="editor.storage.invisibleCharacters?.visibility"
+        :active="editor.storage.invisibleCharacters?.visibility()"
         @click="editor.commands.toggleInvisibleCharacters()"
       >
         <icons.InvisibleCharacters />
@@ -707,7 +710,7 @@ onBeforeUnmount(() => {
       <!-- history -->
 
       <v-button
-        v-if="editorExtensions.includes('history')"
+        v-if="editorExtensions.includes('undoRedo')"
         v-tooltip="t('wysiwyg_options.undo') + ' - ' + translateShortcut(['meta', 'z'])"
         small
         icon
@@ -718,7 +721,7 @@ onBeforeUnmount(() => {
       </v-button>
 
       <v-button
-        v-if="editorExtensions.includes('history')"
+        v-if="editorExtensions.includes('undoRedo')"
         v-tooltip="t('wysiwyg_options.redo') + ' - ' + translateShortcut(['meta', 'shift', 'z'])"
         small
         icon
@@ -758,7 +761,7 @@ onBeforeUnmount(() => {
         </div>
       </div>
       <template #actions>
-        <v-button v-tooltip.bottom="t('save')" icon rounded :disabled="linkHref === null" @click="linkSave">
+        <v-button v-tooltip.bottom="t('save')" icon :disabled="linkHref === null" @click="linkSave">
           <v-icon name="check" />
         </v-button>
       </template>
@@ -812,7 +815,7 @@ onBeforeUnmount(() => {
         </template>
       </div>
       <template #actions>
-        <v-button v-tooltip.bottom="t('save_image')" icon rounded @click="imageSave">
+        <v-button v-tooltip.bottom="t('save_image')" icon @click="imageSave">
           <v-icon name="check" />
         </v-button>
       </template>
@@ -830,7 +833,7 @@ onBeforeUnmount(() => {
 
   [disabled] svg,
   .disabled svg {
-    fill: var(--foreground-subdued);
+    fill: var(--theme--foreground-subdued);
   }
 }
 
@@ -871,7 +874,6 @@ onBeforeUnmount(() => {
 
   &:hover {
     border-color: var(--theme--form--field--input--border-color-hover);
-    box-shadow: var(--theme--form--field--input--box-shadow-hover);
   }
 
   &:focus-within,
@@ -1019,7 +1021,7 @@ onBeforeUnmount(() => {
     }
 
     .ProseMirror p.is-editor-empty:first-child::before {
-      color: var(--foreground-subdued);
+      color: var(--theme--foreground-subdued);
       content: attr(data-placeholder);
       float: left;
       height: 0;
@@ -1029,7 +1031,7 @@ onBeforeUnmount(() => {
     .has-focus {
       border-radius: 3px;
       //box-shadow: 0 0 6px 2px var(--background-subdued);
-      box-shadow: var(--card-shadow);
+      box-shadow: var(--theme--card--shadow);
     }
 
     ul[data-type="taskList"] {
@@ -1065,7 +1067,7 @@ onBeforeUnmount(() => {
       td,
       th {
         min-width: 1em;
-        border: 1px solid var(--border-normal);
+        border: 1px solid var(--theme--border-color);
         padding: 3px 6px;
         vertical-align: top;
         box-sizing: border-box;
@@ -1079,7 +1081,7 @@ onBeforeUnmount(() => {
       th {
         font-weight: bold;
         text-align: left;
-        background-color: var(--background-normal);
+        background-color: var(--theme--background-normal);
       }
 
       .selectedCell:after {

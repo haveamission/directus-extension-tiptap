@@ -1,5 +1,5 @@
 import { defineInterface } from "@directus/extensions-sdk";
-import type { Field, DeepPartial } from "@directus/types";
+import type { AppField, DeepPartial } from "@directus/types";
 import TiptapInterface from "./tiptap-interface.vue";
 import { extensionsMeta, extensionsGroups } from "./extensions";
 
@@ -24,7 +24,7 @@ export default defineInterface({
   group: "standard",
   recommendedDisplays: ["tiptap"],
   options: ({ field }) => {
-    const options: DeepPartial<Field>[] = [
+    const options: DeepPartial<AppField>[] = [
       {
         field: "extensions",
         name: "Extensions",
